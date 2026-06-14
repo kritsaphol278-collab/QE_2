@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("admin")
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  image       String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model University {
+  id        String    @id 
+  name      String
+  banner    String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Product {
+  id                String      @id @default(cuid())
+  name              String
+  sku               String      @unique
+  description       String?
+  price             Float
+  cost              Float?
+  stock             Int         @default(0)
+  lowStockThreshold Int         @default(10)
+  image             String?
+  images            String?     // JSON array of image URLs
+  status            String      @default("active")
+  
+  // ความสัมพันธ์กับ Category
+  categoryId        String?
+  category          Category?   @relation(fields: [categoryId], references: [id])
+  
+  // ความสัมพันธ์กับ University (ที่เพิ่มเข้ามาใหม่)
+  universityId      String?
+  university        University? @relation(fields: [universityId], references: [id])
+
+  orderItems        OrderItem[]
+  reviews           Review[]
+  inventory         Inventory?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  name        String
+  email       String    @unique
+  phone       String?
+  address     String?
+  city        String?
+  country     String?
+  postalCode  String?
+  segment     String?     // VIP, Regular, New
+  totalSpent  Float       @default(0)
+  orderCount  Int         @default(0)
+  lastOrderAt DateTime?
+  orders      Order[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderId       String      @unique
+  customerId    String?
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  customerName  String
+  email         String
+  userId        String?
+  phone         String?
+  totalAmount   Float
+  address       String?
+  amount        Float
+  discount      Float       @default(0)
+  tax           Float       @default(0)
+  total         Float
+  status        String      @default("pending")
+  paymentStatus String      @default("unpaid")
+  paymentMethod String?
+  notes         String?
+  items         OrderItem[]
+  couponId      String?
+  coupon        Coupon?     @relation(fields: [couponId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  discount  Float   @default(0)
+  total     Float
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Coupon {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  description   String?
+  discountType  String   // percentage, fixed
+  discountValue Float
+  minPurchase   Float?
+  maxDiscount   Float?
+  usageLimit    Int?
+  usedCount     Int      @default(0)
+  startDate     DateTime
+  endDate       DateTime
+  status        String   @default("active")
+  orders        Order[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  productId    String
+  customerName String
+  rating       Int
+  comment      String?
+  status       String   @default("pending")
+  product      Product  @relation(fields: [productId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Inventory {
+  id          String    @id @default(cuid())
+  productId   String    @unique
+  product     Product   @relation(fields: [productId], references: [id])
+  quantity    Int       @default(0)
+  reserved    Int       @default(0)
+  available   Int       @default(0)
+  location    String?
+  lastRestock DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model InventoryMovement {
+  id        String   @id @default(cuid())
+  productId String
+  type      String   // in, out, adjustment
+  quantity  Int
+  reason    String?
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   // เก็บเลข OTP 6 หลัก
+  expires   DateTime // วันหมดอายุ
+  createdAt DateTime @default(now())
+
+  @@unique([email, token])
+}
