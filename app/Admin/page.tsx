@@ -408,6 +408,10 @@ export default function AdminDashboard() {
                   >
                     <option value="cu">Chulalongkorn (cu)</option>
                     <option value="tu">Thammasat (tu)</option>
+                    <option value="ku">Kasetsart (ku)</option>
+                    <option value="mu">Mahidol (mu)</option>
+                    <option value="kmitl">Ladkrabang (kmitl)</option>
+                    <option value="cmu">Chiang Mai (cmu)</option>
                   </select>
                 </div>
                 <div>
